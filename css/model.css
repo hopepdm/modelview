@@ -1,0 +1,169 @@
+@import url("https://fonts.googleapis.com/css?family=Fira+Mono");
+/* line 5, ../sass/tmp.scss */
+html,
+body {
+width: 100%;
+height: 100%;
+margin: 0;
+padding: 0;
+overflow: hidden;
+font-family: 'Fira Mono', helvetica, arial, sans-serif;
+font-weight: 400;
+font-size: 62.5%;
+background-color: #228188;
+}
+
+/* line 17, ../sass/tmp.scss */
+#webgl-container {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+cursor: pointer;
+}
+
+/* line 26, ../sass/tmp.scss */
+.loading {
+position: absolute;
+width: 100%;
+height: 100%;
+background-color: #000000;
+opacity: 1;
+-webkit-transition: opacity 1.2s ease-out;
+-o-transition: opacity 1.2s ease-out;
+transition: opacity 1.2s ease-out;
+pointer-events: none;
+z-index: 5;
+}
+
+/* line 39, ../sass/tmp.scss */
+.loading__progress {
+position: absolute;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+text-align: center;
+-webkit-transition: opacity 0.25s ease-out;
+-o-transition: opacity 0.25s ease-out;
+transition: opacity 0.25s ease-out;
+opacity: 0;
+}
+
+/* line 51, ../sass/tmp.scss */
+.loading__progress__text {
+font-size: 1.6rem;
+color: white;
+margin-bottom: 1rem;
+}
+
+/* line 57, ../sass/tmp.scss */
+.loading__progress__bar {
+display: inline-block;
+width: 10rem;
+height: 0.2rem;
+background-color: white;
+transform: scale(0, 0);
+transform-origin: center center;
+-webkit-transition: transform 0.25s ease-out;
+-o-transition: transform 0.25s ease-out;
+transition: transform 0.25s ease-out;
+}
+
+/* line 69, ../sass/tmp.scss */
+.oui,
+.credits {
+user-select: none;
+}
+
+/* line 74, ../sass/tmp.scss */
+.credits {
+position: absolute;
+right: 20px;
+bottom: 20px;
+color: white;
+text-align: right;
+}
+
+/* line 82, ../sass/tmp.scss */
+.credits__title {
+font-size: 1.5rem;
+margin-bottom: 0.5absoluterem;
+}
+
+/* line 87, ../sass/tmp.scss */
+.credits__links-el {
+position: relative;
+font-size: 1rem;
+color: white;
+text-decoration: none;
+font-weight: 200;
+}
+/* line 94, ../sass/tmp.scss */
+.credits__links-el:before {
+position: absolute;
+content: '';
+display: block;
+left: 0;
+bottom: -0.2rem;
+width: 100%;
+height: 0.2rem;
+background: white;
+opacity: 0;
+transform: translate3d(0, 0.3rem, 0);
+transition: transform 0.25s ease-out, opacity 0.25s ease-out;
+}
+/* line 108, ../sass/tmp.scss */
+.credits__links-el:hover {
+font-size: 1rem;
+color: white;
+text-decoration: none;
+font-weight: 200;
+}
+/* line 115, ../sass/tmp.scss */
+.credits__links-el:hover:before {
+opacity: 1;
+transform: none;
+}
+/* line 121, ../sass/tmp.scss */
+.credits__links-el:first-child {
+margin-right: 2rem;
+}
+/* line 124, ../sass/tmp.scss */
+.credits__links-el:first-child:after {
+position: absolute;
+content: '|';
+left: 100%;
+margin-left: 1rem;
+opacity: 0.8;
+}
+
+/* line 134, ../sass/tmp.scss */
+.indications {
+position: absolute;
+left: 50%;
+bottom: 18px;
+color: white;
+transform: translate(-50%, 0);
+font-size: 1.1rem;
+line-height: 1.6rem;
+text-align: center;
+}
+
+/* line 145, ../sass/tmp.scss */
+.message {
+position: absolute;
+top: 40%;
+left: 50%;
+transform: translate3d(-50%, -50%, 0);
+backface-visibility: hidden;
+font-size: 8rem;
+color: white;
+font-weight: bold;
+text-transform: uppercase;
+opacity: 0;
+pointer-events: none;
+user-select: none;
+-moz-user-select: none;
+-webkit-user-select: none;
+}

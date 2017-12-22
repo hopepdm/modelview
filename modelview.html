@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>3dModelView</title>
+    <link rel="stylesheet" href="./css/model.css">
+    <link rel="stylesheet" href="./css/dat.gui.css">
+</head>
+
+<body>
+    <script src="http://wow.techbrood.com/libs/threejs/three.80.min.js"></script>
+    <script src="http://wow.techbrood.com/libs/jquery/jquery-1.11.1.min.js"></script>
+    <script src="./js/OrbitControls.js"></script>
+
+    <!-- loading -->
+    <div class="loading">
+        <div class="loading__progress">
+            <div class="loading__progress__text">0%</div>
+            <div class="loading__progress__bar"></div>
+        </div>
+    </div>
+
+    <!-- webgl -->
+    <div id="webgl-container"></div>
+
+    <div class="credits">
+        <h1 class="credits__title">fm_ph</h1>
+    </div>
+    <p class="message"></p>
+
+    <p class="indications">
+        if you like this, we can communicate in private.
+    </p>
+
+    <!-- shaders -->
+    <script id="fragmentshader" type="x-shader/x-fragment"></script>
+    <script id="fragmentshader" type="x-shader/x-vertex"></script>
+
+    <script src="./js/utils.js"></script>
+    <!-- <script src="./js/helpers.js"></script> -->
+    <script src="./js/dat.gui.js"></script>
+
+    <!-- 主函数 -->
+    <script>
+        let isModelLoad = false
+
+        let modelControl = {
+            a: 1,
+            b: true,
+            c: function () {
+
+            }
+        }
+        //gui 界面
+        let gui = new dat.GUI()
+        gui.domElement.style = 'position: absolute; top: 62px; left: 4px'
+
+        class Renderer extends THREE.WebGLRenderer {
+            constructor(options = {
+                antialias: true,
+                alpha: true
+            }) {
+                super(options)
+
+                this.setSize(window.innerWidth, window.innerHeight)
+                this.setPixelRatio(window.devicePixelRatio)
+                this.setClearColor(0xaaaaaa, 1.0)
+
+                this.shadowMap.enabled = false
+
+                //this.resize = this.resize.bind(this)
+                //document.addEventListener('resize', this.resize, false)
+                this.resize = this.resize.bind(this)
+                this.addGUI()
+            }
+
+            addGUI() {
+                gui.add(modelControl, 'c').name('testc')
+                gui.add(modelControl, 'b').name('testb')
+
+                //gui.addColor(c,'').onChange()
+                //gui.addFolder(name).add(c,'', 1, 100).step(num).onChange()
+            }
+
+            resize(width, height) {
+                this.setSize(width, height)
+            }
+
+        }
+
+        class Camera extends THREE.PerspectiveCamera {
+            constructor(fov, aspect, near, far) {
+                super(fov, aspect, near, far)
+
+                this.controls = new THREE.OrbitControls(this, document.getElementById('webgl-container'))
+
+                this.controls.enabled = true
+
+                this.resize = this.resize.bind(this)
+
+                this.addGUI()
+            }
+
+            addGUI() {
+
+            }
+
+            update(delta) {
+                this.controls.update(delta)
+            }
+
+            resize(width, height) {
+                this.aspect = width / height
+                this.updateProjectionMatrix()
+            }
+        }
+
+        class Scene extends THREE.Scene {
+            constructor(Renderer, Camera, Loader) {
+                super(Renderer, Camera, Loader)
+
+                this.renderer = Renderer
+                this.camera = Camera
+                this.loader = Loader
+
+                //
+
+                this.createScene()
+                this.addGUI()
+            }
+
+            createScene() {
+                this.initCamera()
+                this.initMeshes()
+                this.initLights()
+                this.initHelpers()
+
+                this.render = this.render.bind(this)
+                this.raf = requestAnimationFrame(this.render)
+            }
+
+            initCamera() {
+                this.add(this.camera)
+            }
+
+            initMeshes() {
+
+            }
+
+            initLights() {
+                this.ambient = new THREE.AmbientLight(0x000000)
+                this.add(this.ambient)
+                console.log(this.ambient.position)
+            }
+
+            initHelpers() {
+                this.gridHelper = new THREE.GridHelper(2, 5)
+                //this.gridHelper.visible = true
+                this.add(this.gridHelper)
+
+                this.axisHelper = new THREE.AxisHelper(3)
+                //this.axisHelper.visible = true
+                this.add(this.axisHelper)
+            }
+
+            addGUI() {
+                
+            }
+
+            render() {
+                this.renderer.render(this, this.camera)
+                requestAnimationFrame(this.render)
+            }
+        }
+
+        class App {
+            static begin() {
+                const credits = document.querySelector('.credits')
+                const loadingEl = document.querySelector('.loading')
+                const progress = document.querySelector('.loading__progress')
+                const progressTextEl = document.querySelector('.loading__progress__text')
+                const progressBarEl = document.querySelector('.loading__progress__bar')
+
+                credits.style.opacity = 1
+                progress.style.opacity = 1     
+
+                const renderer = new Renderer()  
+
+                //camera
+                const camera = new Camera(75, window.innerWidth / window.innerHeight, 0.1, 10000)
+                camera.position.x = 0
+                camera.position.y = 1
+                camera.position.z = 3
+
+                //scene
+                if (isModelLoad) {
+
+                } else {
+                    loadingEl.style.display = 'none'
+                    const scene = new Scene(renderer, camera)
+                    console.log(scene)
+                }
+
+                //renderer
+                
+                const container = document.getElementById('webgl-container')
+                container.appendChild(renderer.domElement)
+            }
+
+        }
+
+        let app = App.begin()
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>hand</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css?family=Fira+Mono");
+        /* line 5, ../sass/tmp.scss */
+        html,
+        body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: 'Fira Mono', helvetica, arial, sans-serif;
+        font-weight: 400;
+        font-size: 62.5%;
+        }
+
+        /* line 17, ../sass/tmp.scss */
+        #webgl-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+        }
+
+        /* line 26, ../sass/tmp.scss */
+        .loading {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-color: #000000;
+        opacity: 1;
+        -webkit-transition: opacity 1.2s ease-out;
+        -o-transition: opacity 1.2s ease-out;
+        transition: opacity 1.2s ease-out;
+        pointer-events: none;
+        z-index: 5;
+        }
+
+        /* line 39, ../sass/tmp.scss */
+        .loading__progress {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        -webkit-transition: opacity 0.25s ease-out;
+        -o-transition: opacity 0.25s ease-out;
+        transition: opacity 0.25s ease-out;
+        opacity: 0;
+        }
+
+        /* line 51, ../sass/tmp.scss */
+        .loading__progress__text {
+        font-size: 1.6rem;
+        color: white;
+        margin-bottom: 1rem;
+        }
+
+        /* line 57, ../sass/tmp.scss */
+        .loading__progress__bar {
+        display: inline-block;
+        width: 10rem;
+        height: 0.2rem;
+        background-color: white;
+        transform: scale(0, 0);
+        transform-origin: center center;
+        -webkit-transition: transform 0.25s ease-out;
+        -o-transition: transform 0.25s ease-out;
+        transition: transform 0.25s ease-out;
+        }
+
+        /* line 69, ../sass/tmp.scss */
+        .oui,
+        .credits {
+        user-select: none;
+        }
+
+        /* line 74, ../sass/tmp.scss */
+        .credits {
+        position: absolute;
+        right: 20px;
+        bottom: 20px;
+        color: white;
+        text-align: right;
+        }
+
+        /* line 82, ../sass/tmp.scss */
+        .credits__title {
+        font-size: 1.5rem;
+        margin-bottom: 0.5absoluterem;
+        }
+
+        /* line 87, ../sass/tmp.scss */
+        .credits__links-el {
+        position: relative;
+        font-size: 1rem;
+        color: white;
+        text-decoration: none;
+        font-weight: 200;
+        }
+        /* line 94, ../sass/tmp.scss */
+        .credits__links-el:before {
+        position: absolute;
+        content: '';
+        display: block;
+        left: 0;
+        bottom: -0.2rem;
+        width: 100%;
+        height: 0.2rem;
+        background: white;
+        opacity: 0;
+        transform: translate3d(0, 0.3rem, 0);
+        transition: transform 0.25s ease-out, opacity 0.25s ease-out;
+        }
+        /* line 108, ../sass/tmp.scss */
+        .credits__links-el:hover {
+        font-size: 1rem;
+        color: white;
+        text-decoration: none;
+        font-weight: 200;
+        }
+        /* line 115, ../sass/tmp.scss */
+        .credits__links-el:hover:before {
+        opacity: 1;
+        transform: none;
+        }
+        /* line 121, ../sass/tmp.scss */
+        .credits__links-el:first-child {
+        margin-right: 2rem;
+        }
+        /* line 124, ../sass/tmp.scss */
+        .credits__links-el:first-child:after {
+        position: absolute;
+        content: '|';
+        left: 100%;
+        margin-left: 1rem;
+        opacity: 0.8;
+        }
+
+        /* line 134, ../sass/tmp.scss */
+        .indications {
+        position: absolute;
+        left: 50%;
+        bottom: 18px;
+        color: white;
+        transform: translate(-50%, 0);
+        font-size: 1.1rem;
+        line-height: 1.6rem;
+        text-align: center;
+        }
+
+        /* line 145, ../sass/tmp.scss */
+        .message {
+        position: absolute;
+        top: 40%;
+        left: 50%;
+        transform: translate3d(-50%, -50%, 0);
+        backface-visibility: hidden;
+        font-size: 8rem;
+        color: white;
+        font-weight: bold;
+        text-transform: uppercase;
+        opacity: 0;
+        pointer-events: none;
+        user-select: none;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        }
+    </style>
+</head>
+<body>
+        <script src="http://wow.techbrood.com/libs/threejs/three.80.min.js"></script>
+        <script src="./js/FBXLoader.js"></script>
+        <script src="http://wow.techbrood.com/libs/jquery/jquery-1.11.1.min.js"></script>
+        <script src="http://wow.techbrood.com/libs/gsap/TweenMax.min.js"></script>
+        <!-- loading -->
+        <div class="loading">
+          <div class="loading__progress">
+            <div class="loading__progress__text">0%</div>
+            <div class="loading__progress__bar"></div>
+          </div>
+        </div>
+
+        <!-- webgl -->
+        <div id="webgl-container"></div>
+
+        <div class="credits">
+          <h1 class="credits__title">fm_ph</h1>
+        </div>
+        <p class="message"></p>
+        
+        <p class="indications">
+          Click or press spacebar for a surprise
+        </p>
+        
+        <!-- Shaders -->
+        <script id="hand_fragment_shader" type="x-shader/x-fragment">
+            vec4 mod289(vec4 x)
+          {
+            return x - floor(x * (1.0 / 289.0)) * 289.0;
+          }
+        
+          vec4 permute(vec4 x)
+          {
+            return mod289(((x*34.0)+1.0)*x);
+          }
+        
+          vec4 taylorInvSqrt(vec4 r)
+          {
+            return 1.79284291400159 - 0.85373472095314 * r;
+          }
+        
+          vec2 fade(vec2 t) {
+            return t*t*t*(t*(t*6.0-15.0)+10.0);
+          }
+        
+          float noise(vec2 P)
+          {
+            vec4 Pi = floor(P.xyxy) + vec4(0.0, 0.0, 1.0, 1.0);
+            vec4 Pf = fract(P.xyxy) - vec4(0.0, 0.0, 1.0, 1.0);
+            Pi = mod289(Pi); // To avoid truncation effects in permutation
+            vec4 ix = Pi.xzxz;
+            vec4 iy = Pi.yyww;
+            vec4 fx = Pf.xzxz;
+            vec4 fy = Pf.yyww;
+        
+            vec4 i = permute(permute(ix) + iy);
+        
+            vec4 gx = fract(i * (1.0 / 41.0)) * 2.0 - 1.0 ;
+            vec4 gy = abs(gx) - 0.5 ;
+            vec4 tx = floor(gx + 0.5);
+            gx = gx - tx;
+        
+            vec2 g00 = vec2(gx.x,gy.x);
+            vec2 g10 = vec2(gx.y,gy.y);
+            vec2 g01 = vec2(gx.z,gy.z);
+            vec2 g11 = vec2(gx.w,gy.w);
+        
+            vec4 norm = taylorInvSqrt(vec4(dot(g00, g00), dot(g01, g01), dot(g10, g10), dot(g11, g11)));
+            g00 *= norm.x;
+            g01 *= norm.y;
+            g10 *= norm.z;
+            g11 *= norm.w;
+        
+            float n00 = dot(g00, vec2(fx.x, fy.x));
+            float n10 = dot(g10, vec2(fx.y, fy.y));
+            float n01 = dot(g01, vec2(fx.z, fy.z));
+            float n11 = dot(g11, vec2(fx.w, fy.w));
+        
+            vec2 fade_xy = fade(Pf.xy);
+            vec2 n_x = mix(vec2(n00, n01), vec2(n10, n11), fade_xy.x);
+            float n_xy = mix(n_x.x, n_x.y, fade_xy.y);
+            return 2.3 * n_xy;
+          }
+        
+          #define PHONG
+        
+          uniform vec3 diffuse;
+          uniform vec3 emissive;
+          uniform vec3 specular;
+          uniform float shininess;
+          uniform float opacity;
+        
+          uniform float uTime;
+          uniform vec2 uResolution;
+          uniform vec3 uColor1;
+          uniform vec3 uColor2;
+        
+          #include <common>
+          #include <packing>
+          #include <color_pars_fragment>
+          #include <uv_pars_fragment>
+          #include <uv2_pars_fragment>
+          #include <map_pars_fragment>
+          #include <alphamap_pars_fragment>
+          #include <aomap_pars_fragment>
+          #include <lightmap_pars_fragment>
+          #include <emissivemap_pars_fragment>
+          #include <envmap_pars_fragment>
+          #include <fog_pars_fragment>
+          #include <bsdfs>
+          #include <lights_pars>
+          #include <lights_phong_pars_fragment>
+          #include <shadowmap_pars_fragment>
+          #include <bumpmap_pars_fragment>
+          #include <normalmap_pars_fragment>
+          #include <specularmap_pars_fragment>
+          #include <logdepthbuf_pars_fragment>
+          #include <clipping_planes_pars_fragment>
+        
+          vec3 custom() {
+            vec3 color = vec3(0.0);
+        
+            float amount = 15.0;
+            float origin = 1.0;
+            float angle = PI / 2.0;
+        
+            vec2 uv = vUv;
+        
+            mat2 rotmat = mat2(cos(angle), sin(angle), -sin(angle), cos(angle));
+        
+            uv = (uv - 0.5) * rotmat + 0.5;
+        
+            uv.x += uTime * 0.1;
+        
+            float sawtooth = fract(uv.x * amount + origin);
+            float triangle = abs(2.0 * sawtooth - 1.0);
+            float width = fwidth(uv.x);
+            float edge = width * 2.0 * amount;
+        
+            float stripes = smoothstep(0.5 - edge, 0.5 + edge, triangle);
+        
+            float n = noise(uv + uTime * 0.2) * 1.0;
+        
+            color = mix(uColor1, uColor2, stripes);
+            color = mix(uColor1, color, n + 0.3);
+        
+            return color;
+          }
+        
+          void main() {
+        
+            #include <clipping_planes_fragment>
+        
+            vec4 diffuseColor = vec4( diffuse, opacity );
+            ReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );
+            vec3 totalEmissiveRadiance = emissive;
+        
+            #include <logdepthbuf_fragment>
+            #include <map_fragment>
+            #include <color_fragment>
+            #include <alphamap_fragment>
+            #include <alphatest_fragment>
+            #include <specularmap_fragment>
+            #include <normal_flip>
+            #include <normal_fragment>
+            #include <emissivemap_fragment>
+        
+            // accumulation
+            #include <lights_phong_fragment>
+            #include <lights_template>
+        
+            // modulation
+            #include <aomap_fragment>
+        
+            reflectedLight.directDiffuse = custom();
+        
+            vec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;
+        
+            #include <envmap_fragment>
+        
+            gl_FragColor = vec4( outgoingLight, diffuseColor.a );
+        
+            #include <premultiplied_alpha_fragment>
+            #include <tonemapping_fragment>
+            #include <encodings_fragment>
+            #include <fog_fragment>
+        
+          }
+        
+        </script>
+        
+        <script id="hand_vertex_shader" type="x-shader/x-vertex">
+            #define PHONG
+        
+          varying vec3 vViewPosition;
+        
+          #ifndef FLAT_SHADED
+        
+            varying vec3 vNormal;
+        
+          #endif
+        
+          #include <common>
+          #include <uv_pars_vertex>
+          #include <uv2_pars_vertex>
+          #include <displacementmap_pars_vertex>
+          #include <envmap_pars_vertex>
+          #include <color_pars_vertex>
+          #include <morphtarget_pars_vertex>
+          #include <skinning_pars_vertex>
+          #include <shadowmap_pars_vertex>
+          #include <logdepthbuf_pars_vertex>
+          #include <clipping_planes_pars_vertex>
+        
+          void main() {
+        
+            #include <uv_vertex>
+            #include <uv2_vertex>
+            #include <color_vertex>
+        
+            #include <beginnormal_vertex>
+            #include <morphnormal_vertex>
+            #include <skinbase_vertex>
+            #include <skinnormal_vertex>
+            #include <defaultnormal_vertex>
+        
+          #ifndef FLAT_SHADED // Normal computed with derivatives when FLAT_SHADED
+        
+            vNormal = normalize( transformedNormal );
+        
+          #endif
+        
+            #include <begin_vertex>
+            #include <displacementmap_vertex>
+            #include <morphtarget_vertex>
+            #include <skinning_vertex>
+            #include <project_vertex>
+            #include <logdepthbuf_vertex>
+            #include <clipping_planes_vertex>
+        
+            vViewPosition = - mvPosition.xyz;
+        
+            #include <worldpos_vertex>
+            #include <envmap_vertex>
+            #include <shadowmap_vertex>
+        
+          }
+        </script>
+        
+        <script src='./js/utils.js'></script>
+        <script src='./js/helpers.js'></script>
+        <script>
+            const MESSAGES = [
+                'oh you!',
+                'you fool!',
+                'stop it :p',
+                'yeah yeah',
+                'hell yeah',
+                'pat ♥️',
+                'fab ♥️',
+                'haha',
+                'zbleh',
+                'popopo',
+                'yooo',
+                // 'qlf!',
+                // 'izy',
+                // 'mamen',
+            ]
+
+            const assets = [
+            { id: 'handModel', url: './model/hand.fbx', type: 'text' }
+            ]
+
+            const postProcessingConfig = {
+            active: true,
+            passes: [
+                {
+                active: true,
+                constructor: new helpers.passes.BloomUnrealPass({
+                    resolution: new THREE.Vector2(256, 256),
+                    strength: 1.0,
+                    radius: 1.0,
+                    threshold: 0.8
+                })
+                },
+                {
+                active: true,
+                constructor: new helpers.passes.PostPass()
+                }
+            ]
+            }
+
+            class HandMaterial extends THREE.MeshPhongMaterial {
+
+                constructor (parameters) {
+                    super(parameters)
+
+                    this.type = 'ShaderMaterial'
+
+                    this.bumpMap = new THREE.Texture() // Hack to active OES derivatives extension
+
+                    const baseShader = THREE.ShaderLib.phong
+
+                    const baseUniforms = THREE.UniformsUtils.clone(baseShader.uniforms)
+                    const uniforms = {
+                    uTime: { value: 0.0 },
+                    uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+                    uColor1: { value: new THREE.Color(0x0405C1) }, // Blue
+                    uColor2: { value: new THREE.Color(0xEDD443) } // Yellow
+                    }
+
+                    this.derivatives = true
+
+                    this.uniforms = THREE.UniformsUtils.merge([ baseUniforms, uniforms ])
+
+                    this.vertexShader = document.getElementById( 'hand_vertex_shader' ).textContent
+                    this.fragmentShader = document.getElementById( 'hand_fragment_shader' ).textContent
+                }
+
+                update (time) {
+                    this.uniforms.uTime.value = time
+                }
+            }
+
+            class Hand extends THREE.Object3D {
+
+                /**
+                 * constructor method
+                 */
+                constructor (model) {
+                    super()
+
+                    const scale = 15
+
+                    const mesh = model.children[0]
+                    this.material = new HandMaterial({ skinning: true, shininess: 30, specular: 0x191919 })
+
+                    mesh.geometry.computeBoundingBox()
+                    const meshHeight = (mesh.geometry.boundingBox.max.y - mesh.geometry.boundingBox.min.y)
+
+                    this.skinnedMesh = new THREE.SkinnedMesh(mesh.geometry, this.material, true)
+                    this.skinnedMesh.scale.multiplyScalar(scale)
+                    this.skinnedMesh.castShadow = true
+                    this.add(this.skinnedMesh)
+
+                    this.animated = true
+
+                    this.palm = utils.find(this.skinnedMesh.skeleton.bones, { name: 'palm' })
+
+                    this.littleFinger = utils.find(this.skinnedMesh.skeleton.bones, { name: 'palm_finger_little_01' })
+                    this.littleFingerMiddle = utils.find(this.skinnedMesh.skeleton.bones, { name: 'palm_finger_little_02' })
+
+                    this.ringFinger = utils.find(this.skinnedMesh.skeleton.bones, { name: 'palm_finger_ring_01' })
+                    this.ringFingerMiddle = utils.find(this.skinnedMesh.skeleton.bones, { name: 'palm_finger_ring_02' })
+
+                    this.middleFinger = utils.find(this.skinnedMesh.skeleton.bones, { name: 'palm_finger_middle_01' })
+                    this.middleFingerMiddle = utils.find(this.skinnedMesh.skeleton.bones, { name: 'palm_finger_middle_02' })
+
+                    this.indexFinger = utils.find(this.skinnedMesh.skeleton.bones, { name: 'palm_joint_finger_index_01' })
+                    this.indexFingerMiddle = utils.find(this.skinnedMesh.skeleton.bones, { name: 'palm_joint_finger_index_02' })
+
+                    this.thumb = utils.find(this.skinnedMesh.skeleton.bones, { name: 'palm_joint_thumb_01' })
+                    this.thumbMiddle = utils.find(this.skinnedMesh.skeleton.bones, { name: 'palm_joint_thumb_02' })
+
+                    this.msgEl = document.querySelector('.message')
+                    this.keyIsDown = false
+
+                    this.initHelpers()
+                    this.addGUI()
+                    this.bind()
+                    this.createTl()
+                }
+
+                bind() {
+                    this.changeText = this.changeText.bind(this)
+                    this.onKeyUp = this.onKeyUp.bind(this)
+                    this.onKeyDown = this.onKeyDown.bind(this)
+                    this.onMouseDown = this.onMouseDown.bind(this)
+                    this.onMouseUp = this.onMouseUp.bind(this)
+                    document.addEventListener('keyup', this.onKeyUp, false)
+                    document.addEventListener('keydown', this.onKeyDown, false)
+                    document.querySelector('#webgl-container').addEventListener('mousedown', this.onMouseDown, false)
+                    document.querySelector('#webgl-container').addEventListener('mouseup', this.onMouseUp, false)
+                    document.querySelector('#webgl-container').addEventListener('touchstart', this.onMouseDown, false)
+                    document.querySelector('#webgl-container').addEventListener('touchend', this.onMouseUp, false)
+
+                }
+
+                createTl() {
+                    this.txtTL = new TimelineMax({paused: true})
+                    this.downTl = new TimelineMax({paused: true})
+                    this.upTl = new TimelineMax({paused: true})
+
+                    this.txtTL
+                    .addCallback( this.changeText )
+                    .fromTo(this.msgEl, 0.9, { x: '-50%', y: '-50%', autoAlpha: 0, scale: 0 }, { autoAlpha: 1, scale: 1, ease: Elastic.easeOut.config(1.2, 0.75) }, 0)
+                    .fromTo(this.msgEl, 0.6, { x: '-50%', y: '-50%', autoAlpha: 1, scale: 1 }, { autoAlpha: 0, scale: 0, ease: Expo.easeOut }, '+=0.1')
+
+                    this.downTl
+                    .fromTo(this.palm.rotation, 0.9, { x: 0 }, { x: -Math.PI / 1.7, ease: Elastic.easeOut.config(1.2, 0.75) }, 0)
+                    this.upTl
+                    .to(this.palm.rotation, 0.9, { x: 0, ease: Elastic.easeOut.config(1.2, 0.75) })
+                }
+
+                addGUI () {
+                    this.GUI = helpers.GUI
+
+                    const handFolder = this.GUI.addFolder({ label: 'Hand' })
+
+                    handFolder.add(this.skeletonHelper, 'visible', { label: 'Skeleton' })
+                    handFolder.add(this, 'animated', { label: 'Animated' })
+                }
+
+                initHelpers () {
+                    this.skeletonHelper = new THREE.SkeletonHelper(this.skinnedMesh)
+                    this.skeletonHelper.material.linewidth = 2
+                    this.skeletonHelper.visible = false
+                    this.add(this.skeletonHelper)
+                }
+
+                onKeyUp() {
+                    if(!this.keyIsDown) return
+                    this.keyIsDown = false
+                    this.downTl.pause()
+                    this.upTl.play(0)
+                }
+
+                onKeyDown(event) {
+                    if (this.keyIsDown) return
+
+                    if(event.keyCode === 32) {
+                    this.keyIsDown = true
+                    this.upTl.pause()
+                    this.downTl.play(0)
+                    this.txtTL.play(0)
+                    }
+                }
+
+                onMouseUp() {
+                    this.keyIsDown = false
+                    this.downTl.pause()
+                    this.upTl.play(0)
+                }
+
+                onMouseDown() {
+                    this.keyIsDown = true
+                    this.upTl.pause()
+                    this.downTl.play(0)
+                    this.txtTL.play(0)
+                }
+
+                changeText() {
+                    const randomText = MESSAGES[utils.randomInt(0, MESSAGES.length - 1)]
+                    this.msgEl.innerHTML = randomText
+                }
+
+                /**
+                 * update method
+                 * @param {number} time Time
+                 */
+                update (time) {
+                    // Helpers
+                    this.skeletonHelper.update()
+
+                    // Animate skinned mesh
+                    if (this.animated) {
+                    // this.palm.rotation.x = Math.sin(time * 2.5) * 0.15
+                    this.palm.rotation.y = Math.sin(time * 2.5) * 0.1
+                    this.palm.rotation.z = Math.sin(time * 2.5) * 0.2
+
+                    this.littleFinger.rotation.z = Math.sin(time * 2.3) * 0.2
+                    this.littleFingerMiddle.rotation.x = utils.map(Math.sin(time * 2.3) * 0.9, -0.4, 0.4, -0.4, 0)
+
+                    this.ringFinger.rotation.z = Math.sin(time * 2.3) * 0.2
+                    this.ringFingerMiddle.rotation.x = utils.map(Math.sin(time * 2.3) * 0.9, -0.4, 0.4, -0.4, 0)
+
+                    this.middleFinger.rotation.z = Math.sin(time * 2.3) * 0.2
+                    this.middleFingerMiddle.rotation.x = utils.map(Math.sin(time * 2.3) * 0.9, -0.4, 0.4, -0.4, 0)
+
+                    this.indexFinger.rotation.z = Math.sin(time * 2.3) * 0.2
+                    this.indexFingerMiddle.rotation.x = utils.map(Math.sin(time * 2.3) * 0.9, -0.4, 0.4, -0.4, 0)
+
+                    this.thumb.rotation.z = Math.sin(time * 2.3) * 0.2
+                    this.thumbMiddle.rotation.x = utils.map(Math.sin(time * 2.3) * 0.9, -0.4, 0.4, -0.4, 0)
+                    }
+
+                    // Material
+                    this.material.update(time)
+                }
+            }
+            class Renderer extends THREE.WebGLRenderer {
+
+                /**
+                 * constructor method
+                 * @param {object} options Options
+                 */
+                constructor (options = { antialias: true, alpha: true }) {
+                    super(options)
+
+                    this.setSize(window.innerWidth, window.innerHeight)
+                    this.setPixelRatio(window.devicePixelRatio)
+                    this.setClearColor(0x0405C1, 1.0)
+
+                    this.shadowMap.enabled = true
+                    this.shadowMap.type = THREE.PCFShadowMap
+
+                    this.resize = this.resize.bind(this)
+                    helpers.Window.add(this.resize)
+                }
+
+                /**
+                 * resize method
+                 * @param {number} width  Width
+                 * @param {number} height Height
+                 */
+                resize (width, height) {
+                    this.setSize(width, height)
+                }
+            }
+
+            class Camera extends THREE.PerspectiveCamera {
+
+                /**
+                 * constructor method
+                 */
+                constructor (fov, aspect, near, far) {
+                    super(fov, aspect, near, far)
+
+                    this.controls = new helpers.OrbitControls(this, document.getElementById('webgl-container'))
+                    this.controls.enabled = true
+
+                    this.controls.enableZoom = false
+                    this.controls.enablePan = false
+
+                    this.controls.autoRotate = true
+                    this.controls.autoRotateSpeed = 3
+
+                    this.controls.minPolarAngle = 0
+                    this.controls.maxPolarAngle = utils.toRadians(110)
+
+                    this.controls.target.y = 2
+
+                    this.GUI = helpers.GUI
+
+                    this.resize = this.resize.bind(this)
+                    helpers.Window.add(this.resize)
+
+                    this.addGUI()
+                }
+
+                /**
+                 * addGUI method
+                 */
+                addGUI () {
+                    let toggleSwitch = 0
+
+                    this.GUI.add(this.controls, 'enabled', { label: 'OrbitControls', onChange: (value) => {
+                    toggleSwitch++
+
+                    if (toggleSwitch % 2) return
+                    console.log(this.controls.enabled)
+                    } })
+                }
+
+                /**
+                 * update method
+                 * @param {number} delta Delta
+                 */
+                update (delta) {
+                    this.controls.update(delta)
+                }
+
+                /**
+                 * resize method
+                 * @param {number} width  Width
+                 * @param {number} height Height
+                 */
+                resize (width, height) {
+                    this.aspect = width / height
+                    this.updateProjectionMatrix()
+                }
+            }
+
+                class Scene extends THREE.Scene {
+
+                /**
+                 * constructor method
+                 * @param {Renderer} Renderer Renderer instance
+                 * @param {Camera}   Camera   Camera instance
+                 * @param {Loader}   Loader   Loader
+                 */
+                constructor (Renderer, Camera, Loader) {
+                    super()
+
+                    this.renderer = Renderer
+                    this.camera = Camera
+                    this.loader = Loader
+
+                    this.postProcessing = new helpers.PostProcessing(this, this.camera, this.renderer, postProcessingConfig)
+
+                    this.clock = new helpers.Clock()
+                    this.FBXLoader = new THREE.FBXLoader()
+
+                    this.GUI = helpers.GUI
+
+                    this.createScene()
+                    this.addGUI()
+                }
+
+                /**
+                 * createScene method
+                 */
+                createScene () {
+                    this.initMeshes()
+                    this.initLights()
+                    this.initHelpers()
+
+                    this.render = this.render.bind(this)
+                    this.raf = requestAnimationFrame(this.render)
+                }
+
+                initMeshes () {
+                    const model = this.FBXLoader.parse(this.loader.get('handModel'))
+
+                    this.hand = new Hand(model)
+                    this.add(this.hand)
+
+                    const size = 5
+
+                    const groundGeometry = new THREE.BoxGeometry(size, size, size)
+                    // const groundMaterial = new THREE.MeshBasicMaterial({ wireframe: true })
+                    this.groundMaterial = new THREE.ShadowMaterial()
+                    this.groundMaterial.opacity = 0.2
+                    this.groundMaterial.side = THREE.BackSide
+
+                    this.ground = new THREE.Mesh(groundGeometry, this.groundMaterial)
+                    this.ground.receiveShadow = true
+
+                    this.ground.position.y = size / 2
+                    this.add(this.ground)
+                }
+
+                initLights () {
+                    this.directionalLight = new THREE.DirectionalLight(0xfff2ad, 0.7)
+                    this.add(this.directionalLight)
+
+                    this.directionalLights = []
+
+                    for (let i = 0; i < 4; i++) {
+                    const intensity = utils.randomFloat(0.3, 0.6)
+                    const directionalLight = new THREE.DirectionalLight(0xfff2ad, utils.randomFloat(0.3, 0.6))
+                    directionalLight.defaultIntensity = intensity
+                    directionalLight.position.set(utils.randomFloat(-4, 4), utils.randomFloat(1, 3), utils.randomFloat(-4, 4)).multiplyScalar(4)
+                    directionalLight.castShadow = true
+                    directionalLight.shadow.mapSize.width = directionalLight.shadow.mapSize.height = 1024
+
+                    const directionalLightPivot = new THREE.Group()
+                    directionalLightPivot.randomRotation = utils.randomFloat(0.01, 0.02)
+                    directionalLightPivot.randomSpeed = utils.randomFloat(1, 3)
+                    directionalLightPivot.add(directionalLight)
+
+                    this.add(directionalLightPivot)
+
+                    // const directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight, 1)
+                    // this.add(directionalLightHelper)
+
+                    this.directionalLights.push(directionalLightPivot)
+                    }
+                }
+
+                initHelpers () {
+                    this.gridHelper = new THREE.GridHelper(2, 5)
+                    this.gridHelper.visible = false
+                    this.add(this.gridHelper)
+
+                    this.axisHelper = new THREE.AxisHelper(3)
+                    this.axisHelper.visible = false
+                    this.add(this.axisHelper)
+
+                    // const directionalLightHelper = new THREE.DirectionalLightHelper(this.directionalLight, 1)
+                    // this.add(directionalLightHelper)
+                }
+
+                addGUI () {
+                    const helpersFolder = this.GUI.addFolder({ label: 'Helpers' })
+
+                    helpersFolder.add(this.gridHelper, 'visible', { label: 'Grid' })
+                    helpersFolder.add(this.axisHelper, 'visible', { label: 'Axis' })
+                }
+
+                /**
+                 * render method
+                 */
+                render () {
+                    this.hand.update(this.clock.time)
+
+                    for (let i = 0; i < this.directionalLights.length; i++) {
+                    this.directionalLights[i].rotation.y += this.directionalLights[i].randomRotation
+                    }
+
+                    this.ground.rotation.y += 0.01
+
+                    if (Math.floor(this.clock.time) % 5 === 0) {
+                    const r = utils.randomFloat(-0.4, 0.4)
+                    this.groundMaterial.opacity = r
+
+                    for (let i = 0; i < this.directionalLights.length; i++) {
+                        this.directionalLights[i].children[0].intensity = r
+                    }
+                    } else {
+                    this.groundMaterial.opacity = 0.2
+
+                    for (let i = 0; i < this.directionalLights.length; i++) {
+                        this.directionalLights[i].children[0].intensity = this.directionalLights[i].children[0].defaultIntensity
+                    }
+                    }
+
+                    this.directionalLight.position.copy(this.camera.position)
+                    this.directionalLight.rotation.copy(this.camera.rotation)
+
+                    this.postProcessing.update()
+                    this.camera.update(this.clock.delta)
+
+                    requestAnimationFrame(this.render)
+                }
+            }
+
+            class App {
+
+                /**
+                 * begin method
+                 */
+                static begin () {
+                    const credits = document.querySelector('.credits')
+                    const loadingEl = document.querySelector('.loading')
+                    const progress = document.querySelector('.loading__progress')
+                    const progressTextEl = document.querySelector('.loading__progress__text')
+                    const progressBarEl = document.querySelector('.loading__progress__bar')
+
+                    credits.style.opacity = 1
+                    progress.style.opacity = 1
+
+                    // Renderer
+                    const renderer = new Renderer()
+                    const container = document.getElementById('webgl-container')
+                    container.appendChild(renderer.domElement)
+
+                    // Camera
+                    const camera = new Camera(75, window.innerWidth / window.innerHeight, 0.1, 10000)
+                    camera.position.x = 1
+                    camera.position.y = 3
+                    camera.position.z = 3
+
+                    // Scene
+                    if(assets.length) {
+                        const loader = helpers.assetsLoader({ assets })
+                        loader.on('progress', progress => {
+                            progressTextEl.innerHTML = `${Math.floor(progress * 100)}%`
+                            progressBarEl.style.transform = `scale(${progress}, ${progress})`
+                        })
+                        loader.on('complete', assets => {
+                            const scene = new Scene(renderer, camera, loader)
+
+                            loadingEl.style.opacity = 0
+                        })
+                        loader.start()
+                    } else {
+                        loadingEl.style.display = 'none'
+                        const scene = new Scene(renderer, camera)
+                    }
+                }
+            }
+
+            let the = App.begin()
+        </script>
+    
+</body>
+</html>
