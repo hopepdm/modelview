@@ -11,8 +11,8 @@
 </head>
 
 <body>
-    <script src="http://wow.techbrood.com/libs/threejs/three.80.min.js"></script>
-    <script src="http://wow.techbrood.com/libs/jquery/jquery-1.11.1.min.js"></script>
+    <script src="./js/three.js"></script>
+    <script src="./js/jquery.js"></script>
     <script src="./js/OrbitControls.js"></script>
 
     <!-- loading -->
@@ -48,13 +48,13 @@
         let isModelLoad = false
 
         let modelControl = {
-            a: 1,
-            b: true,
-            c: function () {
+                a: 1,
+                b: true,
+                c: function() {
 
+                }
             }
-        }
-        //gui 界面
+            //gui 界面
         let gui = new dat.GUI()
         gui.domElement.style = 'position: absolute; top: 62px; left: 4px'
 
@@ -158,16 +158,16 @@
 
             initHelpers() {
                 this.gridHelper = new THREE.GridHelper(2, 5)
-                //this.gridHelper.visible = true
+                    //this.gridHelper.visible = true
                 this.add(this.gridHelper)
 
                 this.axisHelper = new THREE.AxisHelper(3)
-                //this.axisHelper.visible = true
+                    //this.axisHelper.visible = true
                 this.add(this.axisHelper)
             }
 
             addGUI() {
-                
+
             }
 
             render() {
@@ -185,9 +185,9 @@
                 const progressBarEl = document.querySelector('.loading__progress__bar')
 
                 credits.style.opacity = 1
-                progress.style.opacity = 1     
+                progress.style.opacity = 1
 
-                const renderer = new Renderer()  
+                const renderer = new Renderer()
 
                 //camera
                 const camera = new Camera(75, window.innerWidth / window.innerHeight, 0.1, 10000)
@@ -205,7 +205,7 @@
                 }
 
                 //renderer
-                
+
                 const container = document.getElementById('webgl-container')
                 container.appendChild(renderer.domElement)
             }
